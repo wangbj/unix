@@ -20,7 +20,7 @@ data ProcessStatus
                             -- dump was produced
                             --
                             -- @since 2.7.0.0
-   | Stopped Signal         -- ^ the process was stopped by a signal
+   | Stopped Signal Int     -- ^ the process was stopped by a signal
    deriving (Eq, Ord, Show)
 
 -- this function disables the itimer, which would otherwise cause confusing
@@ -49,7 +49,8 @@ decipherWaitStatus wstat =
                 if c_WIFSTOPPED wstat /= 0
                    then do
                         let stopsig = c_WSTOPSIG wstat
-                        return (Stopped stopsig)
+                            ev      = fromIntegral wstat `shiftR` 16
+                        return (Stopped stopsig ev)
                    else do
                         ioError (mkIOError illegalOperationErrorType
                                    "waitStatus" Nothing Nothing)
